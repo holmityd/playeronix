@@ -11,5 +11,7 @@ module.exports = {
 		browser: true,
 		es2017: true,
 		node: true
-	}
+	},
+	parser: 'babel-eslint',
+	plugins: ['import']
 };
