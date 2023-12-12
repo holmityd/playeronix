@@ -57,6 +57,7 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"svelte-hero-icons": "^5.0.0"
+		"svelte-hero-icons": "^5.0.0",
+		"tailwind-merge": "^2.1.0"
 	}
 }

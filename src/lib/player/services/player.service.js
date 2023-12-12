@@ -81,3 +81,24 @@ export function toggleMute() {
 		video.volume = 0;
 	}
 }
+
+export function calculateProgress(current, total) {
+	try {
+		return (current / total) * 100;
+	} catch (error) {
+		console.error('Failed to calculate progress: ', error);
+		return 0;
+	}
+}
+
+export function createFunctionWithCooldown(callback, delay) {
+	let cooldownActive = false;
+	return function (...args) {
+		if (cooldownActive) return;
+		cooldownActive = true;
+		setTimeout(() => {
+			callback(...args);
+			cooldownActive = false;
+		}, delay);
+	};
+}

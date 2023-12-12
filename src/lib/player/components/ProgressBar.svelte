@@ -1,8 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
-	import { formatTime, manageEventListeners, setVideoTime } from '../services/player.service.js';
+	import {
+		calculateProgress,
+		createFunctionWithCooldown,
+		formatTime,
+		manageEventListeners,
+		setVideoTime
+	} from '../services/player.service.js';
 	import { writable } from 'svelte/store';
-	import { canControlStore, videoElmStore } from '../stores/player.store.js';
+	import { canControlStore, styleStore, videoElmStore } from '../stores/player.store.js';
+	import { twMerge } from 'tailwind-merge';
 
 	$: video = $videoElmStore;
 	$: canControl = $canControlStore;
@@ -15,40 +22,14 @@
 	let progressBarElement;
 
 	// Util
-	function calculateProgress(current, total) {
-		try {
-			return (current / total) * 100;
-		} catch (error) {
-			console.error('Failed to calculate progress: ', error);
-			return 0;
-		}
-	}
-
-	// Progress
-	function updateProgress() {
-		try {
-			if (!video.paused) saveTimeEveryFiveSeconds();
-			progress.set(calculateProgress(video.currentTime, video.duration));
-		} catch (error) {
-			console.error(
-				'An error occurred while updating video progress. Video playback has been stopped.'
-			);
-		}
-	}
-	function createFunctionWithCooldown(callback, delay) {
-		let cooldownActive = false;
-		return function () {
-			if (cooldownActive) return;
-			cooldownActive = true;
-			setTimeout(() => {
-				callback();
-				cooldownActive = false;
-			}, delay);
-		};
-	}
 	const saveTimeEveryFiveSeconds = createFunctionWithCooldown(() => {
+		// console.log(time);
 		// localStorage.setItem(VIDEO_TIME, String(video.currentTime));
 	}, 5000);
+	function updateProgress() {
+		if (!video.paused) saveTimeEveryFiveSeconds(video.currentTime);
+		progress.set(calculateProgress(video.currentTime, video.duration));
+	}
 
 	// Buffer progress
 	function updateBufferProgress() {
@@ -111,60 +92,71 @@
 		hoverProgress.set(0);
 	}
 
-	// Event listeners
-	function videoEvents(event) {
-		switch (event.type) {
-			case 'timeupdate':
-				updateProgress();
-				break;
-			case 'progress':
-				updateBufferProgress();
-				break;
-		}
-	}
-	function progressMouseEvents(event) {
-		switch (event.type) {
-			case 'mousedown':
-				mouseDown(event);
-				break;
-			case 'mousemove':
-				mouseHover(event);
-				break;
-			case 'mouseout':
-				mouseOut();
-				break;
-		}
-	}
-	function documentMouseEvents(event) {
-		switch (event.type) {
-			case 'mousemove':
-				mouseMove(event);
-				break;
-			case 'mouseup':
-				mouseUp();
-				break;
-		}
-	}
-
 	// Lifecycle hooks
 	onMount(() => {
-		const removeListeners = [
-			manageEventListeners(video, ['timeupdate', 'progress'], videoEvents),
-			manageEventListeners(
-				progressBarElement,
-				['mousedown', 'mousemove', 'mouseout'],
-				progressMouseEvents
-			),
-			manageEventListeners(document, ['mousemove', 'mouseup'], documentMouseEvents)
+		const listeners = [
+			{
+				elm: video,
+				events: {
+					timeupdate: () => updateProgress(),
+					progress: () => updateBufferProgress()
+				}
+			},
+			{
+				elm: progressBarElement,
+				events: {
+					mousedown: (e) => mouseDown(e),
+					mousemove: (e) => mouseHover(e),
+					mouseout: () => mouseOut()
+				}
+			},
+			{
+				elm: document,
+				events: {
+					mousemove: (e) => mouseMove(e),
+					mouseup: () => mouseUp()
+				}
+			}
 		];
+		const removeListeners = listeners.map((listener) =>
+			manageEventListeners(listener.elm, Object.keys(listener.events), (e) =>
+				listener.events[e.type](e)
+			)
+		);
 		return () => removeListeners.forEach((item) => item());
 	});
+
+	$: style = $styleStore;
+
+	const progressBarStyles = {
+		default: 'bg-gray-700',
+		youtube: 'bg-white/40 -translate-y-1/2'
+	};
+	$: progressBarClasses = twMerge(
+		'h-full relative group outline-none',
+		progressBarStyles[style],
+		canControl ? 'cursor-pointer' : 'cursor-default'
+	);
+
+	const lineStyles = {
+		buffer: {
+			default: 'bg-gray-500/50',
+			youtube: 'bg-white/25'
+		},
+		hover: {
+			default: 'bg-slate-100/25',
+			youtube: 'bg-white/50'
+		},
+		progress: {
+			default: 'bg-green-500',
+			youtube: 'bg-red-600'
+		}
+	};
+	$: lineClass = (line) => twMerge('absolute h-full', lineStyles[line][style]);
 </script>
 
 <div
-	class="h-full relative group bg-gray-700 outline-none {canControl
-		? 'cursor-pointer'
-		: 'cursor-default'}"
+	class={progressBarClasses}
 	bind:this={progressBarElement}
 	aria-label="Video progress"
 	role="progressbar"
@@ -174,9 +166,9 @@
 >
 	<span class="absolute bottom-0 left-0 w-full h-2.5" />
 	<div class="pointer-events-none">
-		<div class="absolute h-full bg-gray-500/50" style="width: {$bufferProgress}%;" />
-		<div class="absolute h-full bg-slate-100/25" style="width: {$hoverProgress}%;" />
-		<div class="absolute h-full bg-green-500" style="width: {$progress}%;" />
+		<div class={lineClass('buffer')} style="width: {$bufferProgress}%;" />
+		<div class={lineClass('hover')} style="width: {$hoverProgress}%;" />
+		<div class={lineClass('progress')} style="width: {$progress}%;" />
 	</div>
 	{#if hoverDuration}
 		<div

@@ -4,7 +4,8 @@
 	import { SpeakerWave, SpeakerXMark } from 'svelte-hero-icons';
 	import { writable } from 'svelte/store';
 	import { manageEventListeners, toggleMute } from '../services/player.service.js';
-	import { videoElmStore } from '../stores/player.store.js';
+	import { styleStore, videoElmStore } from '../stores/player.store.js';
+	import { twMerge } from 'tailwind-merge';
 
 	$: video = $videoElmStore;
 
@@ -46,6 +47,13 @@
 		const removeListeners = manageEventListeners(video, ['volumechange'], syncVolumeWithVideo);
 		return () => removeListeners();
 	});
+
+	$: style = $styleStore;
+	const volumeBarStyles = {
+		default: 'bg-green-500',
+		youtube: 'bg-white'
+	};
+	$: volumeBarClasses = twMerge('h-full transition-width duration-100', volumeBarStyles[style]);
 </script>
 
 <div class="group flex">
@@ -62,10 +70,7 @@
 				tabindex="-1"
 				aria-label="volume"
 			/>
-			<div
-				class="h-full bg-green-500 transition-width duration-100"
-				style={`width: ${volumeLevel}%`}
-			/>
+			<div class={volumeBarClasses} style={`width: ${volumeLevel}%`} />
 		</div>
 	</div>
 </div>

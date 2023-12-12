@@ -1,6 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
-	import { canControlStore, controlsVisibleStore, videoElmStore } from '../stores/player.store.js';
+	import { twMerge } from 'tailwind-merge';
+	import {
+		canControlStore,
+		controlsVisibleStore,
+		styleStore,
+		videoElmStore
+	} from '../stores/player.store.js';
 	import {
 		togglePlay,
 		setVideoTime,
@@ -14,6 +20,8 @@
 	import Timeline from './Timeline.svelte';
 	import FullscreenButton from './FullscreenButton.svelte';
 	import Loading from './Loading.svelte';
+
+	$: style = $styleStore;
 
 	// Props
 	export let videoContainer;
@@ -74,6 +82,25 @@
 		const removeListeners = manageEventListeners(document, ['keydown'], handleKeyPress);
 		return () => removeListeners();
 	});
+
+	const videoControlsFrameStyles = {
+		default: 'pt-0 pb-1 backdrop-blur bg-gray-700/50',
+		youtube: 'pt-1 pb-0 bg-control-pattern bg-repeat-x bg-bottom'
+	};
+	$: videoControlsFrameClass = twMerge(
+		'absolute left-0 w-full px-2 flex transition-bottom duration-200',
+		$controlsVisibleStore ? 'bottom-0' : '-bottom-12',
+		videoControlsFrameStyles[style]
+	);
+
+	const progressFrameStyles = {
+		default: 'bottom-0',
+		youtube: 'top-0'
+	};
+	$: progressFrameClass = twMerge(
+		'absolute left-0 w-full h-1 hover:h-1.5 transition-height duration-100',
+		progressFrameStyles[style]
+	);
 </script>
 
 <button
@@ -86,11 +113,7 @@
 
 <Loading />
 
-<div
-	class="absolute left-0 w-full pt-0 pb-1 px-2 flex backdrop-blur bg-gray-700/50 {$controlsVisibleStore
-		? 'bottom-0'
-		: '-bottom-11'} transition-bottom duration-200"
->
+<div class={videoControlsFrameClass}>
 	{#if $canControlStore}
 		<PlayButton />
 	{/if}
@@ -99,7 +122,7 @@
 	<span class="grow" />
 	<FullscreenButton {videoContainer} />
 
-	<div class="absolute bottom-0 left-0 w-full h-1 hover:h-1.5 transition-height duration-100">
+	<div class={progressFrameClass}>
 		<ProgressBar />
 	</div>
 </div>
