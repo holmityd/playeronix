@@ -1,6 +1,6 @@
 {
 	"name": "playeronix",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -25,6 +25,10 @@
 	],
 	"peerDependencies": {
 		"svelte": "^4.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/holmityd/playeronix.git"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",

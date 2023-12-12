@@ -8,9 +8,10 @@ npm install playeronix
 ```
 
 ## Usage
-```js
-import {Player} from 'playeronix';
-```
 ```html
+<script>
+    import {Player} from 'playeronix';
+</script>
+
 <Player src="video.mp4" subtitles="subtitle.vtt" />
 ```
