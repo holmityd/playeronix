@@ -1,5 +1,5 @@
 <script>
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { ArrowsPointingOut, ArrowsPointingIn } from 'svelte-hero-icons';
 	import IconButton from './IconButton.svelte';
 	import { writable } from 'svelte/store';

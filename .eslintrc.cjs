@@ -5,6 +5,7 @@ module.exports = {
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020,
+		requireConfigFile: false,
 		extraFileExtensions: ['.svelte']
 	},
 	env: {
@@ -12,6 +13,12 @@ module.exports = {
 		es2017: true,
 		node: true
 	},
-	parser: 'babel-eslint',
+	parser: '@babel/eslint-parser',
+	overrides: [
+		{
+			files: ['*.svelte'],
+			parser: 'svelte-eslint-parser'
+		}
+	],
 	plugins: ['import']
 };

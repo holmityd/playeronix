@@ -37,7 +37,7 @@
 
 	// Events
 	function updateMuteStatusAndLocalStorage() {
-		video.muted = !!!video.volume;
+		video.muted = !video.volume;
 		// localStorage.setItem(VIDEO_VOLUME, String(volumeLevel));
 	}
 
